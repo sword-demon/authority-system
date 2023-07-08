@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import top.wjstar.config.security.filter.CheckTokenFilter;
 import top.wjstar.config.security.handler.AnonymousAuthenticationHandler;
 import top.wjstar.config.security.handler.CustomerAccessDeniedHandler;
 import top.wjstar.config.security.handler.LoginFailureHandler;
@@ -33,6 +35,9 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     @Resource
     private CustomerUserDetailsService customerUserDetailsService;
 
+    @Resource
+    private CheckTokenFilter checkTokenFilter;
+
     /**
      * 注入加密类
      *
@@ -51,6 +56,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        // 登录前进行过滤
+        http.addFilterBefore(checkTokenFilter, UsernamePasswordAuthenticationFilter.class);
         // 如果表单请求的用户名不是 username 和 password 还需要单独设置
         // 登录过程的处理
         http.formLogin()    // 表单登录
