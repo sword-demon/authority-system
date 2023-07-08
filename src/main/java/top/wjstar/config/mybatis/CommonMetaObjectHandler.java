@@ -11,10 +11,11 @@ import java.util.Date;
  */
 @Component
 public class CommonMetaObjectHandler implements MetaObjectHandler {
+
     /**
      * 新增的时候自动填充
      *
-     * @param metaObject
+     * @param metaObject MetaObject
      */
     @Override
     public void insertFill(MetaObject metaObject) {
@@ -29,7 +30,7 @@ public class CommonMetaObjectHandler implements MetaObjectHandler {
     /**
      * 修改时自动填充
      *
-     * @param metaObject
+     * @param metaObject MetaObject
      */
     @Override
     public void updateFill(MetaObject metaObject) {
