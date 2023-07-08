@@ -5,16 +5,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.wjstar.config.redis.RedisService;
+import top.wjstar.entity.Permission;
+import top.wjstar.entity.User;
+import top.wjstar.entity.UserInfo;
 import top.wjstar.utils.JwtUtils;
 import top.wjstar.utils.Result;
 import top.wjstar.vo.TokenVo;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/sysUser")
@@ -64,5 +70,31 @@ public class SysUserController {
         // 创建 tokenvo 对象
         TokenVo tokenVo = new TokenVo(expireTime, refreshToken);
         return Result.ok(tokenVo).message("token 刷新成功");
+    }
+
+    /**
+     * 获取用户信息
+     *
+     * @return Result
+     */
+    @GetMapping("/getInfo")
+    public Result getInfo() {
+        // 从 spring security 上下文获取用户信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // 判断用户信息是否为空
+        if (authentication == null) {
+            return Result.error().message("用户信息查询失败");
+        }
+        // 获取用户信息
+        User user = (User) authentication.getPrincipal();
+        // 获取该用户拥有的角色权限信息
+        List<Permission> permissionList = user.getPermissionList();
+        // 获取权限编码
+        Object[] roles = permissionList.stream().filter(Objects::nonNull)
+                .map(Permission::getCode).toArray();
+
+        // 创建用户返回信息
+        UserInfo userInfo = new UserInfo(user.getId(), user.getRealName(), user.getAvatar(), null, roles);
+        return Result.ok(userInfo).message("用户信息查询成功");
     }
 }
