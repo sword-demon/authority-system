@@ -208,3 +208,79 @@ public class AnonymousAuthenticationHandler implements AuthenticationEntryPoint 
     }
 }
 ```
+
+## 编写 spring security 配置类
+
+> 将前面 6 个步骤整合一起使用
+
+```java
+
+@Configuration
+@EnableWebSecurity
+public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Resource
+    private LoginSuccessHandler loginSuccessHandler;
+    @Resource
+    private LoginFailureHandler loginFailureHandler;
+
+    @Resource
+    private AnonymousAuthenticationHandler anonymousAuthenticationHandler;
+    @Resource
+    private CustomerAccessDeniedHandler customerAccessDeniedHandler;
+
+    @Resource
+    private CustomerUserDetailsService customerUserDetailsService;
+
+    /**
+     * 注入加密类
+     *
+     * @return
+     */
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * 处理登录认证
+     *
+     * @param http
+     * @throws Exception
+     */
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // 如果表单请求的用户名不是 username 和 password 还需要单独设置
+        // 登录过程的处理
+        http.formLogin()    // 表单登录
+                .loginProcessingUrl("/api/user/login") // 设置登录请求的 url 地址，自定义
+                .successHandler(loginSuccessHandler) // 登录认证成功的处理器
+                .failureHandler(loginFailureHandler) // 认证失败得处理器
+                .and()
+                .csrf()
+                .disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 不创建 session
+                .and()
+                .authorizeRequests() // 设置需要拦截的请求
+                .antMatchers("/api/user/login").permitAll() // 登录请求放行
+                .anyRequest().authenticated() // 其他一律请求都需要身份认证拦截
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(anonymousAuthenticationHandler) // 匿名无权限访问
+                .accessDeniedHandler(customerAccessDeniedHandler) // 认证用户无权限访问
+                .and()
+                .cors(); // 支持跨域请求
+    }
+
+    /**
+     * 配置认证处理器
+     *
+     * @param auth
+     * @throws Exception
+     */
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(customerUserDetailsService).passwordEncoder(passwordEncoder());
+    }
+}
+```
