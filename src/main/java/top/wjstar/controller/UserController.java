@@ -24,6 +24,7 @@ public class UserController {
     @Resource
     private UserService userService;
 
+
     /**
      * 所有用户信息
      *
@@ -33,5 +34,7 @@ public class UserController {
     public Result listAll() {
         return Result.ok(userService.list());
     }
+
+
 }
 
