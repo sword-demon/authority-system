@@ -7,6 +7,8 @@ import top.wjstar.dao.PermissionMapper;
 import top.wjstar.entity.Permission;
 import top.wjstar.service.PermissionService;
 
+import java.util.List;
+
 /**
  * <p>
  * 服务实现类
@@ -19,4 +21,14 @@ import top.wjstar.service.PermissionService;
 @Transactional
 public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permission> implements PermissionService {
 
+    /**
+     * 根据用户 id 查询权限菜单列表
+     *
+     * @param userId 用户 id
+     * @return 权限菜单列表
+     */
+    @Override
+    public List<Permission> findPermissionListByUserId(Long userId) {
+        return baseMapper.findPermissionListByUserId(userId);
+    }
 }
