@@ -14,13 +14,16 @@ import top.wjstar.entity.Permission;
 import top.wjstar.entity.User;
 import top.wjstar.entity.UserInfo;
 import top.wjstar.utils.JwtUtils;
+import top.wjstar.utils.MenuTree;
 import top.wjstar.utils.Result;
+import top.wjstar.vo.RouterVo;
 import top.wjstar.vo.TokenVo;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/sysUser")
@@ -96,5 +99,28 @@ public class SysUserController {
         // 创建用户返回信息
         UserInfo userInfo = new UserInfo(user.getId(), user.getRealName(), user.getAvatar(), null, roles);
         return Result.ok(userInfo).message("用户信息查询成功");
+    }
+
+    /**
+     * 获取登录用户的菜单数据
+     *
+     * @return
+     */
+    @GetMapping("/getMenuList")
+    public Result getMenuList() {
+        // 从 spring security 上下文获取用户信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // 获取用户信息
+        User user = (User) authentication.getPrincipal();
+        // 获取该用户有的权限
+        List<Permission> permissionList = user.getPermissionList();
+        List<Permission> collect = permissionList.stream()
+                // 只筛选目录和菜单数据 按钮不需要添加到路由中
+                .filter(item -> item != null && item.getType() != 2)
+                .collect(Collectors.toList());
+        // 生成路由数据
+        List<RouterVo> routeVoList = MenuTree.makeRouter(collect, 0L);
+        // 返回数据
+        return Result.ok(routeVoList).message("菜单数据获取成功");
     }
 }
